@@ -1,0 +1,74 @@
+name: deploy
+
+# builds js and pushes it to the deployments branch
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'scripts/**', 'package.json', 'package-lock.json', '.github/workflows/deploy.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check
+        run: npx tsc -p .
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Pick build name
+        id: tag
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "tag=v${version}-build.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      # root: latest build, builds/<tag>/: every build
+      - name: Push to deployments branch
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git fetch --depth=1 origin deployments; then
+            git worktree add deploy FETCH_HEAD
+            git -C deploy checkout -B deployments
+          else
+            git worktree add --orphan -b deployments deploy
+          fi
+
+          # replace latest files, keep builds/
+          find deploy -mindepth 1 -maxdepth 1 ! -name .git ! -name builds -exec rm -rf {} +
+          cp -r dist/. deploy/
+          mkdir -p "deploy/builds/$TAG"
+          cp -r dist/. "deploy/builds/$TAG/"
+
+          git -C deploy add -A
+          git -C deploy commit -m "Deploy $TAG from ${GITHUB_SHA::7}"
+          git -C deploy push origin deployments
+
+          # purge jsdelivr cache for latest files
+          for f in dist/*; do
+            curl -fsS "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@deployments/$(basename "$f")" > /dev/null || true
+          done
