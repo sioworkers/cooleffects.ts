@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cooleffects.ts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    :root {
+      --paper: #eef6f8;
+      --ink: #0b2230;
+      --faint: #6b8794;
+      --rule: #cfe2e8;
+      --accent: #0896b0;
+      --serif: 'Fraunces', Georgia, serif;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #08141b;
+        --ink: #e2f3f7;
+        --faint: #5f7d8a;
+        --rule: #16303b;
+        --accent: #3ddbe8;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: var(--paper);
+      color: var(--ink);
+      font: 13px/1.5 var(--mono);
+    }
+
+    button {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    header {
+      display: flex;
+      justify-content: flex-end;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    header a {
+      color: var(--faint);
+      text-decoration: none;
+    }
+
+    header a:hover { color: var(--ink); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 0;
+    }
+
+    nav {
+      padding: 20px 0;
+      border-right: 1px solid var(--rule);
+    }
+
+    nav button {
+      display: flex;
+      gap: 14px;
+      width: 100%;
+      padding: 6px 24px;
+      color: var(--faint);
+      text-align: left;
+    }
+
+    nav button:hover,
+    nav button[aria-current='true'] { color: var(--ink); }
+
+    nav button[aria-current='true'] .index { color: var(--accent); }
+
+    main {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      padding: 28px 32px 0;
+      font: 500 clamp(44px, 7vw, 88px)/1 var(--serif);
+      letter-spacing: -0.03em;
+    }
+
+    .versions {
+      display: flex;
+      gap: 20px;
+      padding: 18px 32px;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--rule);
+      white-space: nowrap;
+    }
+
+    .versions button {
+      padding-bottom: 2px;
+      color: var(--faint);
+    }
+
+    .versions button:hover { color: var(--ink); }
+
+    .versions button[aria-pressed='true'] {
+      color: var(--ink);
+      box-shadow: inset 0 -1px var(--accent);
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 320px;
+      border: 0;
+    }
+
+    .snippet {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 32px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .snippet code {
+      flex: 1;
+      overflow-x: auto;
+      color: var(--faint);
+      white-space: nowrap;
+    }
+
+    .snippet button { color: var(--accent); }
+
+    .error {
+      padding: 32px;
+      color: var(--faint);
+    }
+
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+
+      nav {
+        display: flex;
+        padding: 10px 8px;
+        overflow-x: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      nav button {
+        width: auto;
+        padding: 6px 12px;
+        white-space: nowrap;
+      }
+
+      h1, .versions, .snippet {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="https://github.com/sioworkers/cooleffects.ts">github ↗</a>
+  </header>
+
+  <div class="layout">
+    <nav id="nav" aria-label="effects"></nav>
+    <main id="main">
+      <h1 id="title"></h1>
+      <div class="versions" id="versions" aria-label="versions"></div>
+      <iframe id="preview" title="preview"></iframe>
+      <div class="snippet">
+        <code id="snippet"></code>
+        <button id="copy" type="button">copy</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const REPO = 'sioworkers/cooleffects.ts';
+    const CDN = `https://cdn.jsdelivr.net/gh/${REPO}@deployments`;
+    const TREE = `https://api.github.com/repos/${REPO}/git/trees/deployments?recursive=1`;
+
+    // effects left out of the showcase
+    // hello is a template.
+    const HIDDEN = new Set(['hello']);
+
+    // demo markup per effect
+    const DEMOS = {
+      typewriter: '<p data-typewriter="Cool Effects|100% free|I dunno what to put here|But you can make|Cool Typewriter Effects" data-loop></p>',
+    };
+
+    const el = (id) => document.getElementById(id);
+    const camel = (s) => s.replace(/[-_.](\w)/g, (_, c) => c.toUpperCase());
+    const buildNumber = (tag) => Number(tag.match(/\d+$/)?.[0] ?? 0);
+    const shortTag = (tag) => tag.replace(/^v[\d.]+-/, '');
+    const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name);
+
+    // name -> builds that contain it, newest first
+    const effects = new Map();
+    let current = { name: '', version: 'latest' };
+
+    async function loadEffects() {
+      const res = await fetch(TREE);
+      if (!res.ok) throw new Error(`github api ${res.status}`);
+      const { tree } = await res.json();
+
+      const builds = (name) => effects.get(name) ?? effects.set(name, []).get(name);
+      for (const { path } of tree) {
+        const [, latest] = path.match(/^([\w-]+)\.min\.js$/) ?? [];
+        const [, tag, built] = path.match(/^builds\/([^/]+)\/([\w-]+)\.min\.js$/) ?? [];
+        if (latest && !HIDDEN.has(latest)) builds(latest);
+        if (built && !HIDDEN.has(built)) builds(built).push(tag);
+      }
+
+      if (effects.size === 0) throw new Error('nothing deployed yet');
+      for (const tags of effects.values()) tags.sort((a, b) => buildNumber(b) - buildNumber(a));
+    }
+
+    function button(label, onclick) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.onclick = onclick;
+      return b;
+    }
+
+    function renderNav() {
+      const names = [...effects.keys()].sort();
+      el('nav').replaceChildren(...names.map((name, i) => {
+        const b = button('', () => select(name));
+        const index = document.createElement('span');
+        index.className = 'index';
+        index.textContent = String(i + 1).padStart(2, '0');
+        b.append(index, name);
+        b.setAttribute('aria-current', name === current.name);
+        return b;
+      }));
+    }
+
+    function renderVersions() {
+      const versions = ['latest', ...effects.get(current.name)];
+      el('versions').replaceChildren(...versions.map((version) => {
+        const b = button(shortTag(version), () => select(current.name, version));
+        b.title = version;
+        b.setAttribute('aria-pressed', version === current.version);
+        return b;
+      }));
+    }
+
+    function renderPreview() {
+      const { name, version } = current;
+      const path = version === 'latest' ? `${name}.min.js` : `builds/${version}/${name}.min.js`;
+      const script = `<script src="${CDN}/${path}"><\/script>`;
+      const demo = DEMOS[name] ?? `<p class="note">loaded window.${camel(name)}</p>`;
+
+      el('preview').srcdoc = `<!doctype html>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,350&family=IBM+Plex+Mono&display=swap">
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    box-sizing: border-box;
+    background: ${css('--paper')};
+    color: ${css('--ink')};
+    font: italic 350 clamp(36px, 8vw, 96px)/1.05 'Fraunces', Georgia, serif;
+    text-align: center;
+  }
+  p { margin: 0; }
+  .note { font: 13px 'IBM Plex Mono', monospace; color: ${css('--faint')}; }
+</style>
+${script}
+${demo}`;
+
+      el('snippet').textContent = script;
+    }
+
+    function select(name, version = 'latest') {
+      if (!effects.get(name).includes(version)) version = 'latest';
+      current = { name, version };
+      el('title').textContent = name;
+      renderNav();
+      renderVersions();
+      renderPreview();
+      history.replaceState(null, '', `#${name}@${version}`);
+    }
+
+    el('copy').onclick = async () => {
+      await navigator.clipboard.writeText(el('snippet').textContent);
+      el('copy').textContent = 'copied';
+      setTimeout(() => (el('copy').textContent = 'copy'), 1200);
+    };
+
+    loadEffects()
+      .then(() => {
+        // #typewriter@v0.0.0-build.2
+        const [name, version] = decodeURIComponent(location.hash.slice(1)).split('@');
+        select(effects.has(name) ? name : [...effects.keys()].sort()[0], version);
+      })
+      .catch((err) => {
+        el('main').innerHTML = `<p class="error">couldn't load effects: ${err.message}</p>`;
+      });
+  </script>
+</body>
+</html>
