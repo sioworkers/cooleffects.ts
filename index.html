@@ -207,6 +207,19 @@
     // demo markup per effect
     const DEMOS = {
       typewriter: '<p data-typewriter="Cool Effects|100% free|I dunno what to put here|But you can make|Cool Typewriter Effects" data-loop></p>',
+      confetti: `<p>click anywhere</p>
+<div class="buttons">
+  <button data-confetti>default</button>
+  <button data-confetti data-confetti-colors="#ff5e5b|#ffd166|#06d6a0|#118ab2|#c77dff">colors</button>
+  <button data-confetti data-confetti-images="https://github.com/sioworker.png?size=64">images</button>
+  <button data-confetti="A|B|C|X|Y|Z">letters</button>
+  <button data-confetti="🎉|✨|🥳|🎊">emoji</button>
+</div>
+<script>
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-confetti]')) confetti.confetti({ origin: e });
+  });
+<\/script>`,
     };
 
     const el = (id) => document.getElementById(id);
@@ -274,13 +287,14 @@
       const demo = DEMOS[name] ?? `<p class="note">loaded window.${camel(name)}</p>`;
 
       el('preview').srcdoc = `<!doctype html>
+<meta charset="utf-8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,350&family=IBM+Plex+Mono&display=swap">
 <style>
   body {
     margin: 0;
     min-height: 100vh;
     display: grid;
-    place-items: center;
+    place-content: center;
     padding: 24px;
     box-sizing: border-box;
     background: ${css('--paper')};
@@ -289,6 +303,17 @@
     text-align: center;
   }
   p { margin: 0; }
+  .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 32px; }
+  .buttons button {
+    padding: 0 0 2px;
+    border: 0;
+    background: none;
+    color: ${css('--faint')};
+    font: 13px 'IBM Plex Mono', monospace;
+    cursor: pointer;
+    box-shadow: inset 0 -1px ${css('--accent')};
+  }
+  .buttons button:hover { color: ${css('--ink')}; }
   .note { font: 13px 'IBM Plex Mono', monospace; color: ${css('--faint')}; }
 </style>
 ${script}
