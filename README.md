@@ -18,6 +18,17 @@ or as a module:
 </script>
 ```
 
+## typewriter
+
+```html
+<span data-typewriter="hello|world" data-loop></span>
+<script src="https://cdn.jsdelivr.net/gh/sioworkers/cooleffects.ts@deployments/typewriter.min.js"></script>
+```
+
+or `typewriter.typewriter('#title', { strings: ['hello', 'world'], loop: true })`.
+
+options: `strings`, `speed`, `deleteSpeed`, `pause`, `loop`, `cursor`.
+
 pin a build with `@deployments/builds/<build>/hello.min.js` ([builds](https://github.com/sioworkers/cooleffects.ts/tree/deployments/builds)).
 
 ## development
