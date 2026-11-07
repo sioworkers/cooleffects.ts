@@ -1,5 +1,7 @@
 // types text into an element, optionally deleting and looping
 
+import { withDefaults } from './helpers.ts';
+
 export interface TypewriterOptions {
   /** text to type; defaults to the element's text */
   strings?: string | string[];
@@ -24,7 +26,8 @@ export interface Typewriter {
   stop(): void;
 }
 
-const defaults = {
+// change these to change every typewriter on the page
+export const defaults = {
   speed: 60,
   deleteSpeed: 30,
   pause: 1500,
@@ -33,7 +36,7 @@ const defaults = {
 
 // every text state and how long to wait before showing the next one
 export function* frames(strings: string[], options: TypewriterOptions = {}): Generator<Frame> {
-  const { speed, deleteSpeed, pause, loop } = { ...defaults, ...options };
+  const { speed, deleteSpeed, pause, loop } = withDefaults(defaults, options);
   if (strings.length === 0) return;
   do {
     for (let i = 0; i < strings.length; i++) {
@@ -113,7 +116,7 @@ function auto(): void {
     const attr = el.dataset.typewriter;
     typewriter(el, {
       strings: attr ? attr.split('|') : undefined,
-      loop: el.hasAttribute('data-loop'),
+      loop: el.hasAttribute('data-loop') || undefined,
     });
   }
 }

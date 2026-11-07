@@ -1,5 +1,7 @@
 // bursts confetti from a point, element or click
 
+import { withDefaults } from './helpers.ts';
+
 export interface ConfettiOptions {
   /** where it bursts from: a point in px, an element, or a mouse event; defaults to the middle of the screen */
   origin?: { x: number; y: number } | Element | MouseEvent;
@@ -48,7 +50,8 @@ export interface Particle {
 
 export const COLORS = ['#0896b0', '#3ddbe8', '#0b5a7a', '#7fe3ee', '#5ab8d6', '#e2f3f7'];
 
-const defaults = {
+// change these to change every burst on the page
+export const defaults = {
   count: 100,
   angle: 90,
   spread: 70,
@@ -67,7 +70,7 @@ export function createParticles(
   options: ConfettiOptions = {},
   rand: () => number = Math.random,
 ): Particle[] {
-  const o = { ...defaults, ...options };
+  const o = withDefaults(defaults, options);
   const looks: [Kind, string[]][] = options.images?.length
     ? [['image', options.images]]
     : options.text?.length
@@ -97,7 +100,7 @@ export function createParticles(
 
 // moves a particle forward by dt frames; returns false once it has faded out
 export function step(p: Particle, options: ConfettiOptions = {}, dt = 1): boolean {
-  const { decay, gravity, distance } = { ...defaults, ...options };
+  const { decay, gravity, distance } = withDefaults(defaults, options);
   const drag = decay ** dt;
   p.vx *= drag;
   p.vy = p.vy * drag + gravity * dt;
@@ -111,7 +114,7 @@ export function step(p: Particle, options: ConfettiOptions = {}, dt = 1): boolea
 
 // 1 at the start, 0 once it has travelled distance px
 export function opacity(p: Particle, options: ConfettiOptions = {}): number {
-  const { distance } = { ...defaults, ...options };
+  const { distance } = withDefaults(defaults, options);
   return Math.max(0, 1 - p.travelled / distance);
 }
 

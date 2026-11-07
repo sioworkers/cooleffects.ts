@@ -1,16 +1,9 @@
 import { tester } from './helpers.ts';
+import { seeded } from '../src/helpers.ts';
 import assert from 'node:assert/strict';
 import { COLORS, createParticles, opacity, step } from '../src/confetti.ts';
 
 const test = tester(import.meta.url);
-
-// repeatable random numbers
-function seeded(seed = 1): () => number {
-  return () => {
-    seed = (seed * 16807) % 2147483647;
-    return (seed - 1) / 2147483646;
-  };
-}
 
 test('makes count particles at the origin', () => {
   const particles = createParticles(10, 20, { count: 25 }, seeded());

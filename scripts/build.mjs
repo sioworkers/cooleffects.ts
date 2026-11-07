@@ -3,8 +3,9 @@ import { build } from 'esbuild';
 import { readdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 
+// helpers.ts is shared code, not an effect
 const entries = (await readdir('src')).filter(
-  (f) => f.endsWith('.ts') && !f.endsWith('.d.ts') && !f.endsWith('.test.ts'),
+  (f) => f.endsWith('.ts') && !f.endsWith('.d.ts') && !f.endsWith('.test.ts') && f !== 'helpers.ts',
 );
 
 await rm('dist', { recursive: true, force: true });
