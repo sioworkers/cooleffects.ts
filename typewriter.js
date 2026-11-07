@@ -1,3 +1,9 @@
+// src/helpers.ts
+function withDefaults(defaults2, options) {
+  const set = Object.entries(options).filter(([, v]) => v !== void 0);
+  return { ...defaults2, ...Object.fromEntries(set) };
+}
+
 // src/typewriter.ts
 var defaults = {
   speed: 60,
@@ -6,7 +12,7 @@ var defaults = {
   loop: false
 };
 function* frames(strings, options = {}) {
-  const { speed, deleteSpeed, pause, loop } = { ...defaults, ...options };
+  const { speed, deleteSpeed, pause, loop } = withDefaults(defaults, options);
   if (strings.length === 0) return;
   do {
     for (let i = 0; i < strings.length; i++) {
@@ -74,7 +80,7 @@ function auto() {
     const attr = el.dataset.typewriter;
     typewriter(el, {
       strings: attr ? attr.split("|") : void 0,
-      loop: el.hasAttribute("data-loop")
+      loop: el.hasAttribute("data-loop") || void 0
     });
   }
 }
@@ -86,6 +92,7 @@ if (typeof document !== "undefined") {
   }
 }
 export {
+  defaults,
   frames,
   typewriter
 };

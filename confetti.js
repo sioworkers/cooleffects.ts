@@ -1,3 +1,9 @@
+// src/helpers.ts
+function withDefaults(defaults2, options) {
+  const set = Object.entries(options).filter(([, v]) => v !== void 0);
+  return { ...defaults2, ...Object.fromEntries(set) };
+}
+
 // src/confetti.ts
 var COLORS = ["#0896b0", "#3ddbe8", "#0b5a7a", "#7fe3ee", "#5ab8d6", "#e2f3f7"];
 var defaults = {
@@ -12,7 +18,7 @@ var defaults = {
 };
 var pick = (list2, rand) => list2[Math.floor(rand() * list2.length)];
 function createParticles(x, y, options = {}, rand = Math.random) {
-  const o = { ...defaults, ...options };
+  const o = withDefaults(defaults, options);
   const looks = options.images?.length ? [["image", options.images]] : options.text?.length ? [["text", options.text]] : [["square", o.colors ?? COLORS], ["circle", o.colors ?? COLORS]];
   return Array.from({ length: o.count }, () => {
     const angle = (o.angle + (rand() - 0.5) * o.spread) * Math.PI / 180;
@@ -35,7 +41,7 @@ function createParticles(x, y, options = {}, rand = Math.random) {
   });
 }
 function step(p, options = {}, dt = 1) {
-  const { decay, gravity, distance } = { ...defaults, ...options };
+  const { decay, gravity, distance } = withDefaults(defaults, options);
   const drag = decay ** dt;
   p.vx *= drag;
   p.vy = p.vy * drag + gravity * dt;
@@ -47,7 +53,7 @@ function step(p, options = {}, dt = 1) {
   return p.travelled < distance;
 }
 function opacity(p, options = {}) {
-  const { distance } = { ...defaults, ...options };
+  const { distance } = withDefaults(defaults, options);
   return Math.max(0, 1 - p.travelled / distance);
 }
 function originPoint(origin) {
@@ -181,6 +187,7 @@ export {
   COLORS,
   confetti,
   createParticles,
+  defaults,
   opacity,
   step
 };
